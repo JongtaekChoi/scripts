@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Check if at least one argument is provided
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 task ..."
+    exit 1
+fi
+
+# Record the start time
+start_time=$(date +%s)
+
+# Execute the provided task
+"$@"
+
+# Record the end time
+end_time=$(date +%s)
+
+# Calculate the duration
+duration=$((end_time - start_time))
+
+# Display the time taken
+echo "Task completed in $duration seconds."
+
+# Use say to announce completion
+say "완료되었습니다"
