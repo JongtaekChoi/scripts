@@ -9,8 +9,27 @@ fi
 # Record the start time
 start_time=$(date +%s)
 
+# Function to display elapsed time
+display_time() {
+    while true; do
+        current_time=$(date +%s)
+        seconds=$((current_time - start_time))
+        echo -ne "($seconds sec)\r"
+        sleep 1
+    done
+}
+
+# Start the display_time function in the background
+display_time &
+
+# Save the PID of the background process
+timer_pid=$!
+
 # Execute the provided task
 "$@"
+
+# Kill the background timer process
+kill $timer_pid
 
 # Record the end time
 end_time=$(date +%s)
