@@ -27,6 +27,7 @@ timer_pid=$!
 
 # Execute the provided task
 "$@"
+task_status=$?
 
 # Kill the background timer process
 kill $timer_pid
@@ -38,7 +39,12 @@ end_time=$(date +%s)
 duration=$((end_time - start_time))
 
 # Display the time taken
-echo "Task completed in $duration seconds."
+if [ $task_status -eq 0 ]; then
+    echo "Task completed in $duration seconds."
+    say "완료되었습니다"
+else
+    echo "Task failed after $duration seconds."
+    say "작업이 실패했습니다"
+fi
 
-# Use say to announce completion
-say "완료되었습니다"
+exit $task_status
