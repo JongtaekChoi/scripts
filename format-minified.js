@@ -43,8 +43,10 @@ console.log("포맷팅 중...");
 // 빠른 포맷팅 (문자 단위 처리)
 function fastFormat(code) {
   let result = "";
-  let stringChars = [];
+  let prevWord = "";
+  let stringChar = null;
   let inRegex = false;
+  let inBracket = false;
   let line = 1;
 
   function addLine() {
@@ -58,45 +60,77 @@ function fastFormat(code) {
     const prev2Char = i > 1 ? code[i - 2] : "";
     const nextChar = i < code.length - 1 ? code[i + 1] : "";
 
+    if (/\w/.test(char)) {
+      if (/\w/.test(prevChar)) {
+        prevWord += char;
+      } else {
+        prevWord = char;
+      }
+    }
+
     // 이스케이프된 문자는 스킵
     if (prevChar === "\\" && prev2Char !== "\\") {
       result += char;
       continue;
     }
 
+    if (inRegex && char === "[" && prevChar != "\\") {
+      inBracket = true;
+    }
+
+    if (
+      inRegex &&
+      inBracket &&
+      char === "]" &&
+      (prevChar != "\\" || prev2Char === "\\")
+    ) {
+      inBracket = false;
+    }
+
     // regex 시작 종료 감지
     if (
-      (prevChar === "=" || prevChar === ",") &&
+      (prevChar === "=" ||
+        prevChar === "," ||
+        prevChar === "(" ||
+        (prevWord == "return" && prevChar == "n")) &&
       char === "/" &&
-      !stringChars.length &&
+      !stringChar &&
       !inRegex
     ) {
       inRegex = true;
       result += char;
+      console.log("regex start");
       continue;
-    } else if (inRegex && char === "/" && prevChar !== "\\") {
+    } else if (
+      inRegex &&
+      char === "/" &&
+      (prevChar !== "\\" || prev2Char === "\\") &&
+      !inBracket
+    ) {
       inRegex = false;
       result += char;
+      console.log("regex end");
       continue;
     }
 
     // 문자열 시작/종료 감지
     if ((char === '"' || char === "'" || char === "`") && !inRegex) {
       // 문자열 끝
-      if (stringChars.length > 0) {
-        if (stringChars[stringChars.length - 1] === char) {
-          stringChars.pop();
+      if (!!stringChar) {
+        if (stringChar === char && (prevChar != "\\" || prev2Char === "\\")) {
+          stringChar = null;
+          console.log("pop:", prevChar + char + nextChar);
         }
       } else {
-        stringChars.push(char);
+        stringChar = char;
+        console.log("push:", prevChar + char + nextChar);
       }
       result += char;
       continue;
     }
-    const inString = stringChars.length > 0;
 
     // 문자열 내부면 그냥 추가
-    if (inString || inRegex) {
+    if (!!stringChar || inRegex) {
       result += char;
       continue;
     }
